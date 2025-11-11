@@ -1,2 +1,2 @@
-# SlotBase-Miner
-dev branch
+# miner
+Dev-Branch
