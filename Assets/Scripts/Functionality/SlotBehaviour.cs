@@ -233,6 +233,13 @@ public class SlotBehaviour : MonoBehaviour
         }
     }
 
+    internal void UpdateBalanceDisplay(double newBalance)
+    {
+        currentBalance = newBalance;
+        if (Balance_text) Balance_text.text = newBalance.ToString("f2");
+        CompareBalance();
+    }
+
     private void CompareBalance()
     {
         if (currentBalance < currentTotalBet)
@@ -458,7 +465,7 @@ public class SlotBehaviour : MonoBehaviour
     private void OnApplicationFocus(bool focus)
     {
         Debug.Log(string.Concat("<color=cyan><b>", focus, "</b></color>"));
-        audioController.CheckFocusFunction(focus, CheckSpinAudio);
+        audioController.SetMuteAll(!focus);
     }
 
     #region Slots
@@ -526,7 +533,6 @@ public class SlotBehaviour : MonoBehaviour
         SocketManager.AccumulateResult(BetCounter);
 
         yield return new WaitUntil(() => SocketManager.isResultdone);
-
 
         for (int i = 0; i < 4; i++)
         {

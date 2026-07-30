@@ -62,6 +62,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private AudioController audioController;
     [SerializeField] private SlotBehaviour slotBehaviour;
     [SerializeField] private SocketIOManager socketManager;
+    [SerializeField] private JSFunctCalls jsFunctCalls;
 
     [Header("All wins popup")]
     [SerializeField] private GameObject WinPopup_Object;
@@ -120,6 +121,19 @@ public class UIManager : MonoBehaviour
     private void Awake()
     {
         SimulateClickByDefault();
+        if (jsFunctCalls != null)
+            jsFunctCalls.RegisterVisibilityListener(gameObject.name);
+    }
+
+    public void OnFocusChanged(string value)
+    {
+        bool focused = value == "1";
+        Debug.Log("UNITY FOCUS CHANGED: " + value + " (focused: " + focused + ")");
+        // This game keeps the user's real mute setting on each AudioSource.mute directly
+        // (per-category sliders, no single isSound flag) - SetMuteAll captures/restores that
+        // per source, so focus events never need to know the user's setting themselves.
+        audioController?.SetMuteAll(!focused);
+        socketManager?.HandleFocusChange(focused);
     }
 
     private IEnumerator LoadingRoutine()

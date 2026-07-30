@@ -17,8 +17,13 @@ public class AudioController : MonoBehaviour
     [SerializeField] private AudioClip Win_Audio;
     [SerializeField] private AudioClip NormalBg_Audio;
 
+    private bool isForceMuted = false;
+    private readonly Dictionary<AudioSource, bool> preFocusMuteState = new Dictionary<AudioSource, bool>();
+    private List<AudioSource> allSources;
+
     private void Awake()
     {
+        allSources = new List<AudioSource> { bg_adudio, audioPlayer_wl, audioPlayer_button, audioPlayer_Spin };
         playBgAudio();
         //if (bg_adudio) bg_adudio.Play();
         //audioPlayer_button.clip = clips[clips.Length - 1];
@@ -64,29 +69,23 @@ public class AudioController : MonoBehaviour
 
     }
 
-    internal void CheckFocusFunction(bool focus, bool IsSpinning)
+    internal void SetMuteAll(bool forceMute)
     {
-        if (!focus)
+        if (forceMute == isForceMuted) return;
+        isForceMuted = forceMute;
+
+        foreach (var source in allSources)
         {
-            bg_adudio.Pause();
-            audioPlayer_wl.Pause();
-            audioPlayer_button.Pause();
-            audioPlayer_Spin.Pause();
-        }
-        else
-        {
-            if (!bg_adudio.mute) bg_adudio.UnPause();
-            if (IsSpinning)
+            if (source == null) continue;
+            if (forceMute)
             {
-                if (!audioPlayer_wl.mute) audioPlayer_wl.UnPause();
-                if (audioPlayer_Spin) audioPlayer_Spin.UnPause();
+                preFocusMuteState[source] = source.mute;
+                source.mute = true;
             }
             else
             {
-                StopWLAaudio();
-                if (audioPlayer_Spin) audioPlayer_Spin.Stop();
+                source.mute = preFocusMuteState.TryGetValue(source, out bool prevMuted) ? prevMuted : source.mute;
             }
-            if (!audioPlayer_button.mute) audioPlayer_button.UnPause();
         }
     }
 
@@ -142,6 +141,9 @@ public class AudioController : MonoBehaviour
 
     internal void ToggleMute(float value, string type = "all")
     {
+        // An explicit user interaction is proof of live focus - it must always win over a
+        // stuck/stale forced-mute from a missed focus-regain event.
+        isForceMuted = false;
 
         switch (type)
         {
@@ -169,7 +171,7 @@ public class AudioController : MonoBehaviour
                 if(value<0.1)
                 audioPlayer_wl.mute = true;
                 else{
-                audioPlayer_wl.mute = true;
+                audioPlayer_wl.mute = false;
                 audioPlayer_wl.volume = value;
 
 
